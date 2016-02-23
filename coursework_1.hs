@@ -121,8 +121,8 @@ runFactorial a = out
 
 ------------------------- Part 1
 
-c1 = undefined
-c2 = undefined
+c1 = (While ((Var "x") :==: (Num 0)) (Print (Num 0)))
+c2 = (While ((Num 0) :<=: (Var "x")) (Print ((Var "x") :=: ((Var "x") :+: (Num 1)))))
 
 
 ------------------------- Part 5

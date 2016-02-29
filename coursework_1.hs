@@ -35,18 +35,28 @@ data Aexp = Num Integer
           | Aexp :+: Aexp
           | Aexp :-: Aexp
           | Aexp :*: Aexp
+          | Next
 
-evalA :: Aexp -> State -> Integer
-evalA (Num n)   _ = n
-evalA (Var v)   s = get s v
-evalA (a :+: b) s = evalA a s + evalA b s
-evalA (a :*: b) s = evalA a s * evalA b s
-evalA (a :-: b) s = evalA a s - evalA b s
+evalA :: Aexp -> State -> Stream -> (Integer,Stream)
+evalA (Num n)   _ st = (n,st)
+evalA (Var v)   s st = (get s v,st)
+evalA (a :+: b) s st = ((x + y),st2) where (x,st1) = evalA a s st
+                                           (y,st2) = evalA b s st1 
+evalA (a :*: b) s st = ((x * y),st2) where (x,st1) = evalA a s st
+                                           (y,st2) = evalA b s st1 
+evalA (a :-: b) s st = ((x - y),st2) where (x,st1) = evalA a s st
+                                           (y,st2) = evalA b s st1 
+evalA Next _ (a:as) = (a,as)
 
+as::Stream
+as = [1,2,3,4,5,6,7,8,9,10]
 
+--a1 :: Aexp
 a1 = undefined
+
+--a2 :: Aexp
 a2 = undefined
-as = undefined
+
 
 
 ------------------------- Part 3
@@ -60,17 +70,21 @@ data Bexp = Boolean Bool
           | Bexp :&&: Bexp
           | Bexp :||: Bexp
 
-evalB :: Bexp -> State -> Bool
-evalB (Boolean b) _ = b
-evalB (a :==: b)  s = evalA a s == evalA b s
-evalB (a :<=: b)  s = evalA a s <= evalA b s
-evalB (Neg b)     s = not (evalB b s)
-evalB (a :&: b)   s = evalB a s && evalB b s
-evalB (a :|: b)   s = evalB a s || evalB b s
-evalB (a :&&: b)  s | evalB a s = evalB b s
-                    | otherwise = False
-evalB (a :||: b)  s | evalB a s = True
-                    | otherwise = evalB b s
+evalB :: Bexp -> State -> Stream -> (Bool,Stream)
+evalB (Boolean b) _ st = (b,st)
+evalB (a :==: b)  s st = ((x == y),st2) where (x,st1) = evalA a s st 
+                                              (y,st2) = evalA b s st1
+evalB (a :<=: b)  s st = ((x <= y),st2) where (x,st1) = evalA a s st 
+                                              (y,st2) = evalA b s st1
+evalB (Neg b)     s st = ((not x),st1)  where (x,st1) = evalB b s st
+evalB (a :&: b)   s st = ((x && y),st2) where (x,st1) = evalB a s st 
+                                              (y,st2) = evalB b s st1
+evalB (a :|: b)   s st = ((x || y),st2) where (x,st1) = evalB a s st 
+                                              (y,st2) = evalB b s st1
+evalB (a :&&: b)  s st | evalB a s st = evalB b s st
+                       | otherwise = (False,st)
+evalB (a :||: b)  s st | evalB a s st = (True,st)
+                       | otherwise = evalB b s st
 
 
 b1 = undefined
@@ -79,7 +93,7 @@ bs = undefined
 
 
 ------------------------- Part 4
-
+{-
 data Comm = Skip
           | Variable :=: Aexp
           | Comm :>: Comm
@@ -131,3 +145,4 @@ c2 = ("x" :=: Num 0) :>:
 ------------------------- Part 5
 
 -- data Chain =
+-}
